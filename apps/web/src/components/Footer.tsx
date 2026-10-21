@@ -50,7 +50,7 @@ export function Footer() {
           </div>
 
           <div>
-            <h3 className="text-sm font-semibold text-slate-100">Product</h3>
+            <h2 className="text-sm font-semibold text-slate-100">Product</h2>
             <ul className="mt-4 space-y-2">
               {footerLinks.product.map((link) => (
                 <li key={link.href}>
@@ -66,7 +66,7 @@ export function Footer() {
           </div>
 
           <div>
-            <h3 className="text-sm font-semibold text-slate-100">Resources</h3>
+            <h2 className="text-sm font-semibold text-slate-100">Resources</h2>
             <ul className="mt-4 space-y-2">
               {footerLinks.resources.map((link) => (
                 <li key={link.href}>
@@ -84,7 +84,7 @@ export function Footer() {
           </div>
 
           <div>
-            <h3 className="text-sm font-semibold text-slate-100">Network</h3>
+            <h2 className="text-sm font-semibold text-slate-100">Network</h2>
             <p className="mt-4 text-sm text-slate-400">
               Currently deployed on{" "}
               <span className="font-medium text-indigo-300">Stellar Testnet</span>
