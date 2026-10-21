@@ -7,10 +7,16 @@ import { CommunityRegistryProvider } from "@/lib/community/CommunityRegistryProv
 const mocks = vi.hoisted(() => ({
   useParams: vi.fn(),
   getCommunity: vi.fn(),
+  useWallet: vi.fn(),
 }));
 
 vi.mock("next/navigation", () => ({
   useParams: mocks.useParams,
+  useSearchParams: () => new URLSearchParams(),
+}));
+
+vi.mock("@/context/WalletProvider", () => ({
+  useWallet: mocks.useWallet,
 }));
 
 vi.mock("@/lib/community/registry", async (importOriginal) => {
@@ -90,6 +96,11 @@ describe("CommunityDetailPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.useParams.mockReturnValue({ id: COMMUNITY_ID });
+    mocks.useWallet.mockReturnValue({
+      address: null,
+      connect: vi.fn(),
+      isConnecting: false,
+    });
     Object.defineProperty(navigator, "clipboard", {
       configurable: true,
       value: { writeText: vi.fn().mockResolvedValue(undefined) },

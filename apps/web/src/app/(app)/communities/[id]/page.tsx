@@ -19,6 +19,8 @@ import {
 } from "@/lib/stellarExplorer";
 import { truncateMiddle } from "@/lib/truncate";
 import { CommunityMemberRoster } from "@/components/community/CommunityMemberRoster";
+import { InviteBanner } from "@/components/community/InviteBanner";
+import { buildInviteUrl } from "@/lib/invite";
 
 function ContractAddress({
   label,
@@ -136,6 +138,11 @@ export default function CommunityDetailPage() {
       return;
     }
     await copyValue("Community page link", canonicalUrl);
+  }
+
+  async function copyInviteLink(id: string) {
+    const inviteUrl = buildInviteUrl(id, window.location.origin);
+    await copyValue("Invite link", inviteUrl);
   }
 
   if (loading && !result) {
@@ -271,6 +278,13 @@ export default function CommunityDetailPage() {
             >
               Share page
             </AppButton>
+            <AppButton
+              tone="secondary"
+              onClick={() => void copyInviteLink(record.id)}
+              aria-label={`Copy an invite link for ${name}`}
+            >
+              Copy invite link
+            </AppButton>
           </div>
         </div>
       </header>
@@ -278,6 +292,8 @@ export default function CommunityDetailPage() {
       <LiveStatus className="mt-3 text-sm text-slate-400">
         {copyStatus}
       </LiveStatus>
+
+      <InviteBanner communityName={name} />
 
       {metadata ? (
         <p className="mt-6 break-words leading-7 text-slate-300 [overflow-wrap:anywhere]">
