@@ -7,6 +7,7 @@ import { useWallet } from "@/context/WalletProvider";
 import { AppButton } from "@/components/ui/AppButton";
 import { AppLinkButton } from "@/components/ui/AppLinkButton";
 import { VoteActions } from "@/components/VoteActions";
+import { VoteReceipt, type VoteReceiptProps } from "@/components/VoteReceipt";
 import type { VoteType } from "@/components/voteOptions.mjs";
 import {
   createGovernorClient,
@@ -81,6 +82,9 @@ export default function ProposalDetailPage({
   const [proposer, setProposer] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [shareStatus, setShareStatus] = useState("");
+  const [voteReceipt, setVoteReceipt] = useState<
+    (VoteReceiptProps & { governor: string; voter: string }) | null
+  >(null);
   const [totals, setTotals] = useState<VoteTotals | null>(null);
   const [quorum, setQuorum] = useState<bigint | null>(null);
   const [totalsError, setTotalsError] = useState<string | null>(null);
@@ -311,10 +315,14 @@ export default function ProposalDetailPage({
   } = useTransactionLifecycle({
       onConfirmed: async () => {
         // Refresh has_voted, proposal state, and available vote data after confirmation
-        const data = await loadProposal();
-        setLoadErrorId(null);
-        setResult(data);
-        await loadVotingPower();
+        try {
+          const data = await loadProposal();
+          setLoadErrorId(null);
+          setResult(data);
+          await loadVotingPower();
+        } catch {
+          setStatus("Your vote was confirmed, but proposal data could not be refreshed. Reload to try again.");
+        }
       },
     });
 
@@ -342,7 +350,22 @@ export default function ProposalDetailPage({
         voter: address,
       });
       // signAndSend handles wallet approval, network submission, and ledger confirmation
-      await tx.signAndSend();
+      const sentTx = await tx.signAndSend();
+      // The SDK can return a SentTransaction with FAILED status without throwing.
+      // Submission alone must never produce a successful vote receipt.
+      if (sentTx?.getTransactionResponse?.status !== "SUCCESS") {
+        throw new Error("Vote could not be confirmed successfully. Check the transaction status before retrying.");
+      }
+      const hash = sentTx.sendTransactionResponse?.hash ?? null;
+      setVoteReceipt({
+        proposalIdHex,
+        voteType,
+        communityName,
+        transactionHash: hash,
+        governor: governorContractId,
+        voter: address,
+      });
+      return { hash };
     });
   }
 
@@ -797,6 +820,13 @@ export default function ProposalDetailPage({
         error={txLifecycle.error}
         isTerminal={txLifecycle.isTerminal}
       />
+
+      {txLifecycle.stage === "confirmed" &&
+        voteReceipt?.proposalIdHex === proposalIdHex &&
+        voteReceipt.governor === governorContractId &&
+        voteReceipt.voter === address && (
+          <VoteReceipt {...voteReceipt} />
+        )}
 
       {status && (
         <LiveStatus
